@@ -19,11 +19,20 @@ export interface Message {
   created_at: string;
 }
 
+export interface TicketMessage {
+  id: string;
+  ticket_id: string;
+  sender: 'user' | 'admin';
+  content: string;
+  created_at: string;
+}
+
 export interface Ticket {
   id: string;
   user_id: string;
   issue_summary: string;
   status: 'open' | 'in_progress' | 'resolved';
+  admin_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +56,7 @@ export interface VoiceResponse {
   audio_url?: string;
   ticket_created?: boolean;
   ticket_id?: string;
+  ticket_url?: string;
   faq_matched?: boolean;
   confidence?: number;
 }

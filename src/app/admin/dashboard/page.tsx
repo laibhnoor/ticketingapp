@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Ticket } from '@/types';
 import Link from 'next/link';
+import AuthGuard from '@/components/admin/AuthGuard';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export default function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -52,122 +54,118 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600">Manage support tickets and conversations</p>
-        </div>
+    <AuthGuard>
+      <main className="min-h-screen bg-gray-50">
+        <AdminHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Support Dashboard
+            </h1>
+            <p className="text-gray-500 mt-1">Manage support tickets and conversations</p>
+          </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow">
-            <div className="text-gray-600 text-sm">Open Tickets</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {tickets.filter((t) => t.status === 'open').length}
+          {/* Stats */}
+          <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="text-gray-500 text-sm">Open Tickets</div>
+              <div className="text-3xl font-semibold text-red-600 mt-1">
+                {tickets.filter((t) => t.status === 'open').length}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="text-gray-500 text-sm">In Progress</div>
+              <div className="text-3xl font-semibold text-amber-600 mt-1">
+                {tickets.filter((t) => t.status === 'in_progress').length}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <div className="text-gray-500 text-sm">Resolved</div>
+              <div className="text-3xl font-semibold text-green-600 mt-1">
+                {tickets.filter((t) => t.status === 'resolved').length}
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg p-6 shadow">
-            <div className="text-gray-600 text-sm">In Progress</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {tickets.filter((t) => t.status === 'in_progress').length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-6 shadow">
-            <div className="text-gray-600 text-sm">Resolved</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {tickets.filter((t) => t.status === 'resolved').length}
-            </div>
-          </div>
-        </div>
 
-        {/* Tickets Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Ticket ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Issue Summary
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoading ? (
+          {/* Tickets Table */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                      Loading tickets...
-                    </td>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ticket ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Issue Summary
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Action
+                    </th>
                   </tr>
-                ) : tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                      No tickets yet
-                    </td>
-                  </tr>
-                ) : (
-                  tickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900 font-mono">
-                        {ticket.id.slice(0, 8)}...
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {ticket.issue_summary}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            ticket.status === 'open'
-                              ? 'bg-red-100 text-red-800'
-                              : ticket.status === 'in_progress'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}
-                        >
-                          {ticket.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(ticket.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/admin/tickets/${ticket.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          View
-                        </Link>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        Loading tickets...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : tickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        No tickets yet
+                      </td>
+                    </tr>
+                  ) : (
+                    tickets.map((ticket) => (
+                      <tr key={ticket.id} className="hover:bg-gray-50 transition">
+                        <td className="px-6 py-4 text-sm text-gray-600 font-mono">
+                          {ticket.id.slice(0, 8)}...
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {ticket.issue_summary}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
+                              ticket.status === 'open'
+                                ? 'bg-red-50 text-red-700'
+                                : ticket.status === 'in_progress'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-green-50 text-green-700'
+                            }`}
+                          >
+                            {ticket.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(ticket.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link
+                            href={`/admin/tickets/${ticket.id}`}
+                            className="text-gray-900 hover:text-gray-600 text-sm font-medium"
+                          >
+                            View →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-
-        {/* Back Link */}
-        <div className="mt-8">
-          <Link href="/" className="text-blue-600 hover:text-blue-800">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
-    </main>
+      </main>
+    </AuthGuard>
   );
 }

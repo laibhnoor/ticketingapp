@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServerClient();
     const threshold = parseFloat(
-      process.env.NEXT_PUBLIC_FAQ_SIMILARITY_THRESHOLD || '0.75'
+      process.env.NEXT_PUBLIC_FAQ_SIMILARITY_THRESHOLD || '0.65'
     );
 
     // Generate embedding for user input
@@ -42,7 +42,18 @@ export async function POST(req: NextRequest) {
 
     if (faqs && faqs.length > 0) {
       for (const faq of faqs) {
-        const score = cosineSimilarity(userEmbedding, faq.embedding);
+        // Parse embedding if stored as string
+        let embedding = faq.embedding;
+        if (typeof embedding === 'string') {
+          try {
+            embedding = JSON.parse(embedding);
+          } catch {
+            continue;
+          }
+        }
+        if (!Array.isArray(embedding)) continue;
+        
+        const score = cosineSimilarity(userEmbedding, embedding);
         if (score > bestScore) {
           bestScore = score;
           bestMatch = faq;
@@ -80,12 +91,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Also create initial message in messages for context
+      await supabase.from('messages').insert({
+        ticket_id: ticket.id,
+        sender: 'user',
+        content: text,
+      });
+
       response = {
         success: true,
         message:
-          'Thank you for your question. A human agent will review your issue and get back to you shortly.',
+          'Thank you for your question. A support ticket has been created and our team will get back to you shortly. You can track your ticket status using the link provided.',
         ticket_created: true,
         ticket_id: ticket.id,
+        ticket_url: `/ticket/${ticket.id}`,
       };
     }
 
